@@ -1,5 +1,6 @@
 def findChecksum(SentMessage, k):
 
+
 	c1 = SentMessage[0:k]
 	c2 = SentMessage[k:2*k]
 	c3 = SentMessage[2*k:3*k]
