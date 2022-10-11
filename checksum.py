@@ -1,81 +1,47 @@
-def findChecksum(SentMessage, k):
+def extract_kbits_sum(message: int, k: int, checksum: int = 0) -> int:
+    KBITS_MASK = (1 << k) - 1
+    sum = message & KBITS_MASK
+
+    for _ in range(3):
+        sum += (message := message >> k) & KBITS_MASK
+    sum += 2 * checksum
+
+    overflow_bits = sum.bit_length() - k
+    if overflow_bits > 0:
+        sum = (sum & KBITS_MASK) + (sum >> k)
+
+    return sum ^ KBITS_MASK
 
 
-	c1 = SentMessage[0:k]
-	c2 = SentMessage[k:2*k]
-	c3 = SentMessage[2*k:3*k]
-	c4 = SentMessage[3*k:4*k]
-
-	Sum = bin(int(c1, 2)+int(c2, 2)+int(c3, 2)+int(c4, 2))[2:]
-
-	if(len(Sum) > k):
-		x = len(Sum)-k
-		Sum = bin(int(Sum[0:x], 2)+int(Sum[x:], 2))[2:]
-	if(len(Sum) < k):
-		Sum = '0'*(k-len(Sum))+Sum
+def find_checksum(s_message: int, k: int) -> int:
+    return extract_kbits_sum(s_message, k)
 
 
-	Checksum = ''
-	for i in Sum:
-		if(i == '1'):
-			Checksum += '0'
-		else:
-			Checksum += '1'
-	return Checksum
-
-def checkReceiverChecksum(ReceivedMessage, k, Checksum):
-
-	# Dividing sent message in packets of k bits.
-	c1 = ReceivedMessage[0:k]
-	c2 = ReceivedMessage[k:2*k]
-	c3 = ReceivedMessage[2*k:3*k]
-	c4 = ReceivedMessage[3*k:4*k]
-
-	ReceiverSum = bin(int(c1, 2)+int(c2, 2)+int(Checksum, 2) +
-					int(c3, 2)+int(c4, 2)+int(Checksum, 2))[2:]
+def check_reciever_checksum(r_message: int, k: int, checksum: int) -> int:
+    return extract_kbits_sum(r_message, k, checksum=checksum)
 
 
-	if(len(ReceiverSum) > k):
-		x = len(ReceiverSum)-k
-		ReceiverSum = bin(int(ReceiverSum[0:x], 2)+int(ReceiverSum[x:], 2))[2:]
+# Driver Code
+def main():
+    sent_message = int("10010101011000111001010011101100", 2)
+    received_message = int("10010101011000111001010011101100", 2)
+    k = 8
 
-	ReceiverChecksum = ''
-	for i in ReceiverSum:
-		if(i == '1'):
-			ReceiverChecksum += '0'
-		else:
-			ReceiverChecksum += '1'
-	return ReceiverChecksum
+    checksum = find_checksum(sent_message, k)
+    receiver_checksum = check_reciever_checksum(received_message, k, checksum)
 
+    print("SENDER SIDE CHECKSUM: ", checksum)
+    print("RECEIVER SIDE CHECKSUM: ", receiver_checksum)
 
-SentMessage = "10010101011000111001010011101100"
-k = 8
-#ReceivedMessage = "10000101011000111001010011101101"
-ReceivedMessage = "10010101011000111001010011101100"
-Checksum = findChecksum(SentMessage, k)
+    final_sum = (checksum + receiver_checksum) ^ ((1 << k) - 1)
 
-
-ReceiverChecksum = checkReceiverChecksum(ReceivedMessage, k, Checksum)
-
-
-print("SENDER SIDE CHECKSUM: ", Checksum)
-print("RECEIVER SIDE CHECKSUM: ", ReceiverChecksum)
-finalsum=bin(int(Checksum,2)+int(ReceiverChecksum,2))[2:]
+    if final_sum == 0:
+        print("Receiver Checksum is equal to 0. Therefore,")
+        print("STATUS: ACCEPTED")
+    else:
+        print("Receiver Checksum is not equal to 0. Therefore,")
+        print("STATUS: ERROR DETECTED")
 
 
-finalcomp=''
-for i in finalsum:
-	if(i == '1'):
-		finalcomp += '0'
-	else:
-		finalcomp += '1'
-
-# If sum = 0, No error is detected
-if(int(finalcomp,2) == 0):
-	print("Receiver Checksum is equal to 0. Therefore,")
-	print("STATUS: ACCEPTED")
-	
-else:
-	print("Receiver Checksum is not equal to 0. Therefore,")
-	print("STATUS: ERROR DETECTED")
-
+if __name__ == "__main__":
+    main()
