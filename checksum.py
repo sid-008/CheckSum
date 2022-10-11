@@ -22,16 +22,16 @@ def check_reciever_checksum(r_message: int, k: int, checksum: int) -> int:
 
 
 # Driver Code
-def main():
-    sent_message = int("10010101011000111001010011101100", 2)
-    received_message = int("10010101011000111001010011101100", 2)
+def test_impl(sent: str, received: str) -> None:
+    sent_message = int(sent, 2)
+    received_message = int(received, 2)
     k = 8
 
     checksum = find_checksum(sent_message, k)
     receiver_checksum = check_reciever_checksum(received_message, k, checksum)
 
-    print("SENDER SIDE CHECKSUM: ", checksum)
-    print("RECEIVER SIDE CHECKSUM: ", receiver_checksum)
+    print("SENDER SIDE CHECKSUM: ", bin(checksum)[2:])
+    print("RECEIVER SIDE CHECKSUM: ", bin(receiver_checksum)[2:])
 
     final_sum = (checksum + receiver_checksum) ^ ((1 << k) - 1)
 
@@ -41,7 +41,23 @@ def main():
     else:
         print("Receiver Checksum is not equal to 0. Therefore,")
         print("STATUS: ERROR DETECTED")
+    print()
 
 
 if __name__ == "__main__":
-    main()
+    test_impl(
+        sent="10010101011000111001010011101100",
+        received="10010101011000111001010011101100",
+    )  # Passes
+    test_impl(
+        sent="10010101011000111011010011111100",
+        received="10010101011000111001010011101100",
+    )  # Fails
+    test_impl(
+        sent="10111001010100101010100010010010",
+        received="10111001010100101010100010010010",
+    )  # Passes
+    test_impl(
+        sent="10111111010110111110100010010010",
+        received="10111001010100101010100010010010",
+    )  # Fails
